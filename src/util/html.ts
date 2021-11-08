@@ -29,12 +29,16 @@ export async function buildImageSrc(image: MagickFile, forceBrowserSupport: bool
   const outputFile = await asOutputFile(img)
   return URL.createObjectURL(outputFile.blob)
 }
+
+interface MyFile extends File {
+  webkitRelativePath: any
+}
 /**
  * Build `MagickInputFile[]` from given HTMLInputElement of type=file that user may used to select several files
  */
 export async function getInputFilesFromHtmlInputElement(el: HTMLInputElement): Promise<MagickInputFile[]> {
   const files = await inputFileToUint8Array(el)
-  return files.map(f => ({ name: f.file.name, content: f.content }))
+  return files.map(f => ({ name: f.file.name, content: f.content, webkitRelativePath: (<MyFile>f.file).webkitRelativePath }))
 }
 
 const browserSupportedImageExtensions = ['gif', 'png', 'jpg', 'webp']

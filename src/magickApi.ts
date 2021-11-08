@@ -21,15 +21,15 @@ export interface MagickOutputFile extends MagickFile {
  */
 export interface MagickInputFile extends MagickFile {
   content: Uint8Array
+  webkitRelativePath?: string
 }
 
 /**
  * {@link call} shortcut that only returns the output files.
  */
 export async function Call(inputFiles: MagickInputFile[], command: string[]): Promise<MagickOutputFile[]> {
-  const result = await call(inputFiles, command)  
-  for(let outputFile of result.outputFiles)
-  {
+  const result = await call(inputFiles, command)
+  for (let outputFile of result.outputFiles) {
     outputFile.blob = new Blob([outputFile.buffer])
   }
   return result.outputFiles
@@ -99,11 +99,10 @@ export function CreatePromiseEvent() {
 }
 
 
-function ChangeUrl(url, fileName)
-{
-    let splitUrl = url.split('/')
-    splitUrl[splitUrl.length -1] = fileName
-    return splitUrl.join('/')
+function ChangeUrl(url, fileName) {
+  let splitUrl = url.split('/')
+  splitUrl[splitUrl.length - 1] = fileName
+  return splitUrl.join('/')
 }
 function GetCurrentUrlDifferentFilename(currentUrl, fileName) {
   return ChangeUrl(currentUrl, fileName);
@@ -123,13 +122,13 @@ let currentJavascriptURL = './magickApi.js';
 //   // eat
 // }
 
-function GenerateStackAndGetPathAtDepth(depth){
+function GenerateStackAndGetPathAtDepth(depth) {
   try {
     let stacktrace$$1 = StackTrace.getSync();
     let filePath = stacktrace$$1[depth].fileName;
-    
+
     // if the stack trace code doesn't return a path separator
-    if(filePath !== undefined && filePath.indexOf('/') === -1 && filePath.indexOf('\\') === -1){
+    if (filePath !== undefined && filePath.indexOf('/') === -1 && filePath.indexOf('\\') === -1) {
       return undefined
     }
     return filePath
@@ -149,12 +148,12 @@ function GetCurrentFileURLHelper3() {
   // I am preferring to do depth 0 first, as that will ensure people that do minification still works
 
   let filePath = GenerateStackAndGetPathAtDepth(0)
-  if(filePath === undefined){
+  if (filePath === undefined) {
     filePath = GenerateStackAndGetPathAtDepth(2)
   }
 
   // if the stack trace code messes up 
-  if(filePath === undefined){
+  if (filePath === undefined) {
     filePath = './magickApi.js';
   }
 
@@ -175,22 +174,21 @@ currentJavascriptURL = GetCurrentFileURL();
 
 const magickWorkerUrl = GetCurrentUrlDifferentFilename(currentJavascriptURL, 'magick.js');
 
-function GenerateMagickWorkerText(magickUrl){
+function GenerateMagickWorkerText(magickUrl) {
   // generates code for the following
   // var magickJsCurrentPath = 'magickUrl';
   // importScripts(magickJsCurrentPath);
 
-  return "var magickJsCurrentPath = '" + magickUrl +"';\n" +
-         'importScripts(magickJsCurrentPath);'
+  return "var magickJsCurrentPath = '" + magickUrl + "';\n" +
+    'importScripts(magickJsCurrentPath);'
 }
 let magickWorker;
-if(currentJavascriptURL.startsWith('http'))
-{
+if (currentJavascriptURL.startsWith('http')) {
   // if worker is in a different domain fetch it, and run it
-    magickWorker = new Worker(window.URL.createObjectURL(new Blob([GenerateMagickWorkerText(magickWorkerUrl)])));
+  magickWorker = new Worker(window.URL.createObjectURL(new Blob([GenerateMagickWorkerText(magickWorkerUrl)])));
 }
-else{
-    magickWorker = new Worker(magickWorkerUrl);
+else {
+  magickWorker = new Worker('magick.js');
 }
 
 const magickWorkerPromises = {}
